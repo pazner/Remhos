@@ -1301,6 +1301,8 @@ void AdvectionOperator::Mult(const Vector &X, Vector &Y) const
          lom.pk->Assemble();
       }
 
+      if (ho_solver) { ho_solver->Setup(); }
+
       // Face contributions.
       asmbl.bdrInt = 0.;
       Mesh *mesh = M_HO.FESpace()->GetMesh();

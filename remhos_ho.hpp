@@ -35,6 +35,8 @@ public:
    virtual ~HOSolver() { }
 
    virtual void CalcHOSolution(const Vector &u, Vector &du) const = 0;
+
+   virtual void Setup() { };
 };
 
 class CGHOSolver : public HOSolver
@@ -62,6 +64,8 @@ public:
                    ParBilinearForm &Mbf, ParBilinearForm &Kbf);
 
    virtual void CalcHOSolution(const Vector &u, Vector &du) const;
+
+   virtual void Setup() { dgmassinv.Setup(); };
 };
 
 class LocalInverseHOSolver : public HOSolver

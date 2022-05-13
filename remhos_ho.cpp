@@ -29,7 +29,7 @@ CGHOSolver::CGHOSolver(ParFiniteElementSpace &space,
 
 void CGHOSolver::CalcHOSolution(const Vector &u, Vector &du) const
 {
-   Vector rhs(u.Size());
+   static Vector rhs(u.Size());
    du = 0.0;
 
    // Invert by preconditioned CG.
@@ -81,7 +81,7 @@ LocalCGHOSolver::LocalCGHOSolver(ParFiniteElementSpace &space,
 
 void LocalCGHOSolver::CalcHOSolution(const Vector &u, Vector &du) const
 {
-   Vector rhs(u.Size());
+   static Vector rhs(u.Size());
    du = 0.0;
 
    if (K.GetAssemblyLevel() == AssemblyLevel::PARTIAL)
@@ -98,7 +98,6 @@ void LocalCGHOSolver::CalcHOSolution(const Vector &u, Vector &du) const
       delete K_mat;
    }
 
-   dgmassinv.Setup();
    dgmassinv.Mult(rhs, du);
 }
 
@@ -112,7 +111,7 @@ void LocalInverseHOSolver::CalcHOSolution(const Vector &u, Vector &du) const
    MFEM_VERIFY(M.GetAssemblyLevel() != AssemblyLevel::PARTIAL,
                "PA for DG is not supported for Local Inverse.");
 
-   Vector rhs(u.Size());
+   static Vector rhs(u.Size());
 
    K.SpMat().HostReadWriteI();
    K.SpMat().HostReadWriteJ();
