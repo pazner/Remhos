@@ -98,10 +98,13 @@ private:
    FCTSolver *fct_solver;
    MonolithicSolver *mono_solver;
 
+
    void UpdateTimeStepEstimate(const Vector &x, const Vector &dx,
                                const Vector &x_min, const Vector &x_max) const;
 
 public:
+   mutable StopWatch sw;
+
    AdvectionOperator(int size, BilinearForm &Mbf_, BilinearForm &_ml,
                      Vector &_lumpedM,
                      ParBilinearForm &Kbf_,
@@ -1157,6 +1160,7 @@ int main(int argc, char *argv[])
    }
    if (myid == 0)
    {
+      cout << "HO solver time " << adv.sw.RealTime() << endl;
       cout << setprecision(10)
            << "Final mass u:  " << mass_u << endl
            << "Max value u:   " << umax << endl << setprecision(6)
@@ -1349,7 +1353,7 @@ void AdvectionOperator::Mult(const Vector &X, Vector &Y) const
       MFEM_VERIFY(ho_solver && lo_solver, "FCT requires HO and LO solvers.");
 
       lo_solver->CalcLOSolution(u, du_LO);
-      ho_solver->CalcHOSolution(u, du_HO);
+      sw.Start(); ho_solver->CalcHOSolution(u, du_HO); sw.Stop();
 
       dofs.ComputeElementsMinMax(u, dofs.xe_min, dofs.xe_max, NULL, NULL);
       dofs.ComputeBounds(dofs.xe_min, dofs.xe_max, dofs.xi_min, dofs.xi_max);
@@ -1374,7 +1378,7 @@ void AdvectionOperator::Mult(const Vector &X, Vector &Y) const
    }
    // The HO option must be last, since some LO solvers use the HO. Then if the
    // user only wants to run LO, this order will give him the LO solution.
-   else if (ho_solver) { ho_solver->CalcHOSolution(u, d_u); }
+   else if (ho_solver) { sw.Start(); ho_solver->CalcHOSolution(u, d_u); sw.Stop(); }
    else { MFEM_ABORT("No solver was chosen."); }
 
    d_u.SyncAliasMemory(Y);
@@ -1400,7 +1404,7 @@ void AdvectionOperator::Mult(const Vector &X, Vector &Y) const
             d_us_LO.SetSize(us.Size());
             lo_solver->CalcLOSolution(us, d_us_LO);
          }
-         ho_solver->CalcHOSolution(us, d_us_HO);
+         sw.Start(); ho_solver->CalcHOSolution(us, d_us_HO); sw.Stop();
 
          // Compute the ratio s = us_old / u_old, and old active dofs.
          Vector s(size);
@@ -1440,7 +1444,7 @@ void AdvectionOperator::Mult(const Vector &X, Vector &Y) const
 #endif
       }
       else if (lo_solver) { lo_solver->CalcLOSolution(us, d_us); }
-      else if (ho_solver) { ho_solver->CalcHOSolution(us, d_us); }
+      else if (ho_solver) { sw.Start(); ho_solver->CalcHOSolution(us, d_us); sw.Stop(); }
       else { MFEM_ABORT("No solver was chosen."); }
 
       d_us.SyncAliasMemory(Y);
