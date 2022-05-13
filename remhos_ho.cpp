@@ -69,6 +69,39 @@ void CGHOSolver::CalcHOSolution(const Vector &u, Vector &du) const
    delete K_mat;
 }
 
+LocalCGHOSolver::LocalCGHOSolver(ParFiniteElementSpace &space,
+                                 ParBilinearForm &Mbf,
+                                 ParBilinearForm &Kbf)
+   : HOSolver(space), dgmassinv(space), M(Mbf), K(Kbf)
+{
+   dgmassinv.SetRelTol(1e-14);
+   dgmassinv.SetAbsTol(0.0);
+   dgmassinv.SetMaxIter(500);
+}
+
+void LocalCGHOSolver::CalcHOSolution(const Vector &u, Vector &du) const
+{
+   Vector rhs(u.Size());
+   du = 0.0;
+
+   if (K.GetAssemblyLevel() == AssemblyLevel::PARTIAL)
+   {
+      K.Mult(u, rhs);
+   }
+   else
+   {
+      K.SpMat().HostReadWriteI();
+      K.SpMat().HostReadWriteJ();
+      K.SpMat().HostReadData();
+      HypreParMatrix *K_mat = K.ParallelAssemble(&K.SpMat());
+      K_mat->Mult(u, rhs);
+      delete K_mat;
+   }
+
+   dgmassinv.Setup();
+   dgmassinv.Mult(rhs, du);
+}
+
 LocalInverseHOSolver::LocalInverseHOSolver(ParFiniteElementSpace &space,
                                            ParBilinearForm &Mbf,
                                            ParBilinearForm &Kbf)

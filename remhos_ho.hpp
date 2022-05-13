@@ -49,6 +49,21 @@ public:
    virtual void CalcHOSolution(const Vector &u, Vector &du) const;
 };
 
+class LocalCGHOSolver : public HOSolver
+{
+protected:
+   mutable DGMassInverse dgmassinv;
+   // mutable DGMassInverse_Direct dgmassinv;
+   ParBilinearForm &M;
+   ParBilinearForm &K;
+
+public:
+   LocalCGHOSolver(ParFiniteElementSpace &space,
+                   ParBilinearForm &Mbf, ParBilinearForm &Kbf);
+
+   virtual void CalcHOSolution(const Vector &u, Vector &du) const;
+};
+
 class LocalInverseHOSolver : public HOSolver
 {
 protected:

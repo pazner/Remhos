@@ -42,7 +42,7 @@
 using namespace std;
 using namespace mfem;
 
-enum class HOSolverType {None, Neumann, CG, LocalInverse};
+enum class HOSolverType {None, Neumann, CG, LocalCG, LocalInverse};
 enum class FCTSolverType {None, FluxBased, ClipScale,
                           NonlinearPenalty, FCTProject};
 enum class LOSolverType {None,    DiscrUpwind,    DiscrUpwindPrec,
@@ -188,7 +188,8 @@ int main(int argc, char *argv[])
                   "High-Order Solver: 0 - No HO solver,\n\t"
                   "                   1 - Neumann iteration,\n\t"
                   "                   2 - CG solver,\n\t"
-                  "                   3 - Local inverse.");
+                  "                   3 - Local CG,\n\t"
+                  "                   4 - Local inverse.");
    args.AddOption((int*)(&lo_type), "-lo", "--lo-type",
                   "Low-Order Solver: 0 - No LO solver,\n\t"
                   "                  1 - Discrete Upwind,\n\t"
@@ -451,6 +452,7 @@ int main(int argc, char *argv[])
    }
 
    if (ho_type == HOSolverType::CG ||
+       ho_type == HOSolverType::LocalCG ||
        ho_type == HOSolverType::LocalInverse ||
        fct_type == FCTSolverType::FluxBased)
    {
@@ -701,6 +703,12 @@ int main(int argc, char *argv[])
    }
    else if (ho_type == HOSolverType::CG)
    {
+      ho_solver = new CGHOSolver(pfes, M_HO, K_HO);
+   }
+   else if (ho_type == HOSolverType::LocalCG)
+   {
+      // ho_solver = new LocalCGHOSolver(pfes, K_HO);
+      // ho_solver = new LocalCGHOSolver(pfes, M_HO, K_HO);
       ho_solver = new CGHOSolver(pfes, M_HO, K_HO);
    }
    else if (ho_type == HOSolverType::LocalInverse)
